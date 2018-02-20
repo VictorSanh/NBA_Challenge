@@ -1,0 +1,14 @@
+Data exploration
+- PCA to visualize data -> Victor
+
+First models (simple without temporal condition)
+- SVM (with kernel) -> Margot
+- Logistic regression -> Margot
+
+First temporal dependece model
+- Convolutional neural network -> Victor
+
+
+Next
+- RNN
+- Feature engineering to capture temporal dependence
