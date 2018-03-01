@@ -1,2 +1,3 @@
 /data/*
+!data/challenge_fichiers_de_sorties_de_test_challenge_nba/*.csv
 /.ipynb_checkpoints/*
