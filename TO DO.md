@@ -16,6 +16,7 @@ Hand crafted feature engineering
 
 Other challenges approaches -> Margot
 
+### 05/03/2018
 
-Next
-- RNN
+- LSTM, CNN, RNN
+- Fourier and wave signal processing
