@@ -50,19 +50,23 @@ def feature_engineering(df):
 	df['diff score_%d' % 1] = df['score_%d' % 1]
 	for k in tqdm(range(2,nb_checks+1)):
 	    df['diff score_%d' % k] = df['score_%d' % k] - df['score_%d' % (k-1)]
+
 	# Compute 2pts/3pts
 	for k in tqdm(range(1,nb_checks+1)):
 	    df['two pts_%d' % k] = df['diff score_%d' % k].apply(lambda x:convert_pt(x, 2))
 	    df['three pts_%d' % k] = df['diff score_%d' % k].apply(lambda x:convert_pt(x, 3))
+
 	#     Compute 2pts/3pts as cumulative sum
 	two_pts_df = df[[k for k in df.columns if 'two pts' in k]].cumsum(axis=1)
 	three_pts_df = df[[k for k in df.columns if 'three pts' in k]].cumsum(axis=1)
 	df = pd.concat([df[[k for k in df.columns if 'two pts' not in k and 'three pts' not in k]], 
 	                    two_pts_df,
 	                    three_pts_df], axis=1)
-	# Compute FG
+	
+	# Compute FG and total rebound
 	for k in tqdm(range(1,nb_checks+1)):
 	    df['fg_%d' % k] = df['two pts_%d' % k] + df['three pts_%d' % k]
+	    df['total rebound_%d' % k] = df['defensive rebound_%d' % k] + df['offensive rebound_%d' % k]
 
 	keep = ['ID']
 	return df[keep + sorted([k for k in df.columns if len(k.split('_')) > 1 and 'diff ' not in k], 
