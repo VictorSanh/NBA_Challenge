@@ -46,12 +46,12 @@ def feature_engineering(df):
     # Add Two Points, Three Points and Field Goal
     nb_checks = 1440
 
-    # Compute score difference
+    #Compute score difference
     df['diff score_%d' % 1] = df['score_%d' % 1]
     for k in tqdm(range(2,nb_checks+1)):
         df['diff score_%d' % k] = df['score_%d' % k] - df['score_%d' % (k-1)]
 
-    # Compute 2pts/3pts
+    #Compute 2pts/3pts
     for k in tqdm(range(1,nb_checks+1)):
         df['two pts_%d' % k] = df['diff score_%d' % k].apply(lambda x:convert_pt(x, 2))
         df['three pts_%d' % k] = df['diff score_%d' % k].apply(lambda x:convert_pt(x, 3))
