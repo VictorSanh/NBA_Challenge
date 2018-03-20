@@ -2,7 +2,7 @@ import numpy as np
 from tqdm import tqdm
 import pandas as pd
 
-def preprocess(data_X_train, data_Y_train, portion_train=0.7) :
+def split_train_val(data_X_train, data_Y_train, portion_train=0.7) :
     # Size of train
     nb_games = len(data_X_train)
     n_train = int(portion_train*nb_games)
@@ -23,52 +23,55 @@ def preprocess(data_X_train, data_Y_train, portion_train=0.7) :
 
 
 def extract_main_features(data_X_test):
-    filter_col = [col for col in data_X_test if col.startswith('miss') or col.startswith('offensive rebound') or col.startswith('score') or col.startswith('assist')
-    											or col.startswith('two pts') or col.startswith('three pts') or col.startswith('fg')]
+    filter_col = [col for col in data_X_test if col.startswith('miss') or col.startswith('total rebound') or col.startswith('score') or col.startswith('assist')
+    											or col.startswith('three points') or col.startswith('fied goals') or col.startswith('free throws')]
     data_X_test = data_X_test[filter_col]
     return data_X_test.as_matrix()
 
 
-def convert_pt(x, nb):
-    """
-    Convert score difference into 2/3 pts goals
-    :param x: value, pandas columns
-    :param nb: 2 or 3
-    :return: differential value
-    """
-    if np.abs(x) == nb:
-        return np.sign(x)
-    else:
-        return 0
+def feature_engineering(data):
+	# Add Field Goals, Free throws, Three Points
+	# Compute total rebound and total foul
+
+	nb_checks = 1440
+	nb_games = len(data)
+
+	data['diff points_1'] = data['score_1']
+	for i in range(1,nb_checks) :
+		data['diff points_{}'.format(i+1)] = data['score_{}'.format(i+1)] - data['score_{}'.format(i)]
 
 
-def feature_engineering(df):
-    # Add Two Points, Three Points and Field Goal
-    nb_checks = 1440
+	# First second
+	data['free throws_1'] =  np.ones(nb_games)*(data['diff points_1'] == 1) - np.ones(nb_games)*(data['diff points_1'] == -1)
+	data['three points_1'] = np.ones(nb_games)*(data['diff points_1'] == 3) - np.ones(nb_games)*(data['diff points_1'] == -3)
+	data['fied goals_1'] = data['score_1'] - data['free throws_1']
+	data['total rebound_1'] = data['offensive rebound_1'] + data['defensive rebound_1']
+	data['total foul_1'] = data['offensive foul_1'] + data['defensive foul_1']    
 
-    #Compute score difference
-    df['diff score_%d' % 1] = df['score_%d' % 1]
-    for k in tqdm(range(2,nb_checks+1)):
-        df['diff score_%d' % k] = df['score_%d' % k] - df['score_%d' % (k-1)]
+	# Other seconds
+	for i in range(2,nb_checks+1) :
+		data['free throws_{}'.format(i)] = np.add(data['free throws_{}'.format(i-1)].as_matrix(),
+											np.ones(nb_games)*(data['diff points_{}'.format(i)] == 1) - np.ones(nb_games)*(data['diff points_{}'.format(i)] == -1)).astype(int)
+		data['three points_{}'.format(i)] = np.add(data['three points_{}'.format(i-1)].as_matrix(),
+											np.ones(nb_games)*(data['diff points_{}'.format(i)] == 3) - np.ones(nb_games)*(data['diff points_{}'.format(i)] == -3)).astype(int)
+		# Field goals = points - free throws
+		data['fied goals_{}'.format(i)] = data['score_{}'.format(i)] - data['free throws_{}'.format(i)]
+		data['total rebound_{}'.format(i)] = data['offensive rebound_{}'.format(i)] + data['defensive rebound_{}'.format(i)]
+		data['total foul_{}'.format(i)] = data['offensive foul_{}'.format(i)] + data['defensive foul_{}'.format(i)]
 
-    #Compute 2pts/3pts
-    for k in tqdm(range(1,nb_checks+1)):
-        df['two pts_%d' % k] = df['diff score_%d' % k].apply(lambda x:convert_pt(x, 2))
-        df['three pts_%d' % k] = df['diff score_%d' % k].apply(lambda x:convert_pt(x, 3))
 
-    # Compute 2pts/3pts as cumulative sum
-    two_pts_df = df[[k for k in df.columns if 'two pts' in k]].cumsum(axis=1)
-    three_pts_df = df[[k for k in df.columns if 'three pts' in k]].cumsum(axis=1)
-    df = pd.concat([df[[k for k in df.columns if 'two pts' not in k and 'three pts' not in k]],
-                        two_pts_df,
-                        three_pts_df], axis=1)
+    
 
-    # Compute FG and total rebound, total foul
-    for k in tqdm(range(1,nb_checks+1)):
-        df['fg_%d' % k] = df['two pts_%d' % k] + df['three pts_%d' % k]
-        df['total rebound_%d' % k] = df['defensive rebound_%d' % k] + df['offensive rebound_%d' % k]
-        df['total foul_%d' % k] = df['defensive foul_%d' % k] + df['offensive foul_%d' % k]
 
-    keep = ['ID']
-    return df[keep + sorted([k for k in df.columns if len(k.split('_')) > 1 and 'diff ' not in k],
-                                       key=lambda x:int(x.split('_')[1]))]
+
+
+
+
+
+
+
+
+
+
+
+
