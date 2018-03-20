@@ -29,7 +29,7 @@ def extract_main_features(data_X_test):
     return data_X_test.as_matrix()
 
 
-def feature_engineering(data):
+def feature_engineering(data, two_points = False):
     # Add Field Goals, Free throws, Three Points
     # Compute total rebound and total foul
 
@@ -44,6 +44,8 @@ def feature_engineering(data):
     # First second
     data['free throws_1'] =  np.ones(nb_games)*(data['diff points_1'] == 1) - np.ones(nb_games)*(data['diff points_1'] == -1)
     data['three points_1'] = np.ones(nb_games)*(data['diff points_1'] == 3) - np.ones(nb_games)*(data['diff points_1'] == -3)
+    if two_points:
+        data['two points_1'] = np.ones(nb_games)*(data['diff points_1'] == 2) - np.ones(nb_games)*(data['diff points_1'] == -2)
     data['fied goals_1'] = data['score_1'] - data['free throws_1']
     data['total rebound_1'] = data['offensive rebound_1'] + data['defensive rebound_1']
     data['total foul_1'] = data['offensive foul_1'] + data['defensive foul_1']
@@ -54,6 +56,9 @@ def feature_engineering(data):
                                             np.ones(nb_games)*(data['diff points_{}'.format(i)] == 1) - np.ones(nb_games)*(data['diff points_{}'.format(i)] == -1)).astype(int)
         data['three points_{}'.format(i)] = np.add(data['three points_{}'.format(i-1)].as_matrix(),
                                             np.ones(nb_games)*(data['diff points_{}'.format(i)] == 3) - np.ones(nb_games)*(data['diff points_{}'.format(i)] == -3)).astype(int)
+        if two_points:
+            data['two points_{}'.format(i)] = np.add(data['two points_{}'.format(i-1)].as_matrix(),
+                                              np.ones(nb_games)*(data['diff points_{}'.format(i)] == 2) - np.ones(nb_games)*(data['diff points_{}'.format(i)] == -2)).astype(int)
         # Field goals = points - free throws
         data['fied goals_{}'.format(i)] = data['score_{}'.format(i)] - data['free throws_{}'.format(i)]
         data['total rebound_{}'.format(i)] = data['offensive rebound_{}'.format(i)] + data['defensive rebound_{}'.format(i)]
