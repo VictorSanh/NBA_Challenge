@@ -60,19 +60,3 @@ def feature_engineering(data):
 		data['total foul_{}'.format(i)] = data['offensive foul_{}'.format(i)] + data['defensive foul_{}'.format(i)]
 
 	return data
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
